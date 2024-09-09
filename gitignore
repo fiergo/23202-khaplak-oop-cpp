@@ -1,1 +1,4 @@
-
+# Idea
+.idea/
+# CMake
+cmake-build-*/
