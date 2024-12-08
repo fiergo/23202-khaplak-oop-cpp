@@ -22,7 +22,7 @@ int main(int argc, char** argv) {
     fileReader.close();
 
     FileWriter fileWriter = FileWriter(argv[2]);
-    fileWriter.printString("Word;Frequency;Frequency(in %)\n");
+    fileWriter.printString("Word;Frequency;Frequency(%)\n");
     for (const auto& i : WordStatistics.getStatistic()) {
         std::stringstream ss;
         ss << i.word << ';' << i.data << ';' << i.percentage << '\n';
