@@ -1,10 +1,10 @@
-#ifndef TASK_0_TEXTPARSER_H
-#define TASK_0_TEXTPARSER_H
+#pragma once
 
+#include <list>
+#include "FileReader.h"
 
-class TextParser {
-
+class TextParser
+{
+public:
+    std::list<std::string> parseString(const std::string& line);
 };
-
-
-#endif //TASK_0_TEXTPARSER_H
