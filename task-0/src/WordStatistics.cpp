@@ -1,7 +1,7 @@
 #include "WordStatistics.h"
 
-bool WordStatistics::compare(WordFrequency& first, WordFrequency& second) {
-    return (first.data > second.data);
+bool WordStatistics::compare(WordFrequency& word1, WordFrequency& word2) {
+    return (word1.data > word2.data);
 }
 
 void WordStatistics::createStatisticsList(const std::list<std::string>& wordList) {

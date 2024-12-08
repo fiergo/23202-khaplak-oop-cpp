@@ -1,7 +1,6 @@
 #pragma once
 
 #include "FileReader.h"
-#include "WordStatistics.h"
 
 class FileWriter
 {

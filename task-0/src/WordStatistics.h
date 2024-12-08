@@ -17,7 +17,7 @@ private:
     std::list<FrequencyOfWord>* wordsStatistics;
     std::list<std::string>* wordDict;
     int wordsAmount{};
-    static bool compare(FrequencyOfWord& first, FrequencyOfWord& second);
+    static bool compare(FrequencyOfWord& word1, FrequencyOfWord& word2);
     void createStatisticsList(const std::list<std::string>& wordList);
     void findPositionInList(FrequencyOfWord& FrequencyOfWord);
 public:
