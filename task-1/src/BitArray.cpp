@@ -1,12 +1,12 @@
 #include "BitArray.h"
 
-Block::Block(unsigned int value) {
+Container::Container(unsigned int value) {
     this->value = value;
     lastIndex = 0;
     next = nullptr;
 }
 
-Block& Block::operator=(bool bit) {
+Container& Container::operator=(bool bit) {
     if (bit) {
         this->value |= (1 << (BITS_COUNT - lastIndex % BITS_COUNT - 1));
     }
@@ -16,7 +16,7 @@ Block& Block::operator=(bool bit) {
     return *this;
 }
 
-Block::operator bool() const {
+Container::operator bool() const {
     return (this->value & (1 << (BITS_COUNT - lastIndex % BITS_COUNT - 1))) != 0;
 }
 
@@ -39,8 +39,8 @@ BitArray::BitArray(int numBits, unsigned long value) {
 
 BitArray::BitArray(const BitArray& b) {
     *this = BitArray(b.numBits, false);
-    Block* curPtrBitArray = (*this).basePtr;
-    Block* curPtrBitArrayToCopy = b.basePtr;
+    Container* curPtrBitArray = (*this).basePtr;
+    Container* curPtrBitArrayToCopy = b.basePtr;
     while (curPtrBitArrayToCopy) {
         curPtrBitArray->value = curPtrBitArrayToCopy->value;
         curPtrBitArray = curPtrBitArray->next;
@@ -70,46 +70,46 @@ void BitArray::resize(int newNumBits, bool value) {
     // Check if bits amount is the same.
     if (newNumBits == this->numBits)
         return;
-    // Check if we should not change bit array memory blocks.
+    // Check if we should not change bit array memory Containers.
     if ((newNumBits / BITS_COUNT == this->numBits / BITS_COUNT) && this->numBits != -1) {
         this->numBits = newNumBits;
         return;
     }
-    // Check if we should delete bit array memory blocks.
+    // Check if we should delete bit array memory Containers.
     if (newNumBits < this->numBits) {
-        Block* blocksToDelete = basePtr;
-        Block* prev = blocksToDelete;
+        Container* ContainersToDelete = basePtr;
+        Container* prev = ContainersToDelete;
         for (int i = 0; i < alignBits(newNumBits) / BITS_COUNT; i++) {
-            prev = blocksToDelete;
-            blocksToDelete = blocksToDelete->next;
+            prev = ContainersToDelete;
+            ContainersToDelete = ContainersToDelete->next;
         }
         endPtr = prev;
         endPtr->next = nullptr;
         do {
-            Block* blockToDelete = blocksToDelete;
-            blocksToDelete = blocksToDelete->next;
-            delete(blockToDelete);
-        } while (blocksToDelete);
+            Container* ContainerToDelete = ContainersToDelete;
+            ContainersToDelete = ContainersToDelete->next;
+            delete(ContainerToDelete);
+        } while (ContainersToDelete);
         this->numBits = newNumBits;
         return;
     }
     // Check for value input.
     unsigned int byteValue;
     if (!value)
-        byteValue = FALSE_BLOCK;
+        byteValue = FALSE_CONTAINER;
     else
-        byteValue = TRUE_BLOCK;
-    // Add more bit array memory blocks.
+        byteValue = TRUE_CONTAINER;
+    // Add more bit array memory Containers.
     int i = 0;
     if (!basePtr) {
-        basePtr = new Block(byteValue);
+        basePtr = new Container(byteValue);
         endPtr = basePtr;
         i++;
     }
     for (; i < alignBits(newNumBits) / BITS_COUNT - alignBits(this->numBits) / BITS_COUNT; i++) {
-        auto* block = new Block(byteValue);
-        endPtr->next = block;
-        endPtr = block;
+        auto* newContainer = new Container(byteValue);
+        endPtr->next = newContainer;
+        endPtr = newContainer;
     }
     this->numBits = newNumBits;
 }
@@ -202,19 +202,19 @@ BitArray& BitArray::set(int n, bool val) {
     }
     int positionInBitArray = n / BITS_COUNT;
     if (val) {
-        (*getBlock(positionInBitArray)).value = (*getBlock(positionInBitArray)).value | getTrueMask(n % BITS_COUNT);
+        (*getContainer(positionInBitArray)).value = (*getContainer(positionInBitArray)).value | getTrueMask(n % BITS_COUNT);
     }
     else {
-        (*getBlock(positionInBitArray)).value = (*getBlock(positionInBitArray)).value & getFalseMask(n % BITS_COUNT);
+        (*getContainer(positionInBitArray)).value = (*getContainer(positionInBitArray)).value & getFalseMask(n % BITS_COUNT);
     }
-    getBlock(positionInBitArray)->lastIndex = n % 8;
+    getContainer(positionInBitArray)->lastIndex = n % 8;
     return *this;
 }
 
 BitArray& BitArray::set() {
-    Block* positionPtr = basePtr;
+    Container* positionPtr = basePtr;
     while(positionPtr) {
-        positionPtr->value = TRUE_BLOCK;
+        positionPtr->value = TRUE_CONTAINER;
         positionPtr = positionPtr->next;
     }
     return *this;
@@ -226,9 +226,9 @@ BitArray& BitArray::reset(int n) {
 }
 
 BitArray& BitArray::reset() {
-    Block* positionPtr = basePtr;
+    Container* positionPtr = basePtr;
     while (positionPtr) {
-        positionPtr->value = FALSE_BLOCK;
+        positionPtr->value = FALSE_CONTAINER;
         positionPtr = positionPtr->next;
     }
     return *this;
@@ -272,16 +272,16 @@ int BitArray::count() const {
     return res;
 }
 
-Block& BitArray::operator[](int i) {
+Container& BitArray::operator[](int i) {
     if (i >= numBits) {
         resize(i + 1, false);
     }
     else if (i < 0) {
         throw 1;
     }
-    Block* block = getBlock(i / BITS_COUNT);
-    block->lastIndex = i;
-    return *block;
+    Container* Container = getContainer(i / BITS_COUNT);
+    Container->lastIndex = i;
+    return *Container;
 }
 
 int BitArray::size() const {
@@ -320,11 +320,11 @@ unsigned int BitArray::getTrueMask(int position) {
 }
 
 unsigned int BitArray::getFalseMask(int position) const {
-    return TRUE_BLOCK - logPow(2, BITS_COUNT - 1 - position);
+    return TRUE_CONTAINER - logPow(2, BITS_COUNT - 1 - position);
 }
 
-Block* BitArray::getBlock(int position) const{
-    Block* positionPtr = basePtr;
+Container* BitArray::getContainer(int position) const{
+    Container* positionPtr = basePtr;
     for (int i = 0; i < position; i++) {
         positionPtr = positionPtr->next;
     }
@@ -345,13 +345,13 @@ unsigned int BitArray::logPow(int num, int pow) const {
 }
 
 bool BitArray::operator[](int i) const {
-    Block* block = getBlock(i / BITS_COUNT);
-    block->lastIndex = i;
-    return *block;
+    Container* Container = getContainer(i / BITS_COUNT);
+    Container->lastIndex = i;
+    return *Container;
 }
 
-int BitArray::getBlockAmount() const {
-    Block* positionPtr = basePtr;
+int BitArray::getContainerAmount() const {
+    Container* positionPtr = basePtr;
     int count = 0;
     while (positionPtr) {
         count++;

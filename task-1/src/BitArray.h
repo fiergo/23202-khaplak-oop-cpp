@@ -3,17 +3,17 @@
 #include <iostream>
 
 const unsigned int FIRST_BYTE = 0x80000000;
-const unsigned int TRUE_BLOCK = 0xffffffff;
-const unsigned int FALSE_BLOCK = 0;
+const unsigned int TRUE_CONTAINER = 0xffffffff;
+const unsigned int FALSE_CONTAINER = 0;
 const int BITS_COUNT = sizeof(int) * 8;
 
-class Block {
+class Container {
 public:
-    Block* next;
+    Container* next;
     unsigned int value;
     unsigned int lastIndex;
-    explicit Block(unsigned int data);
-    Block& operator=(bool value);
+    explicit Container(unsigned int data);
+    Container& operator=(bool value);
     operator bool() const;
 };
 
@@ -21,10 +21,10 @@ class BitArray
 {
 private:
     // Points on bit array first 8 elements (unsigned int).
-    Block* basePtr{};
+    Container* basePtr{};
 
     // Points on bit array last 8 elements (unsigned int).
-    Block* endPtr{};
+    Container* endPtr{};
 
     // The bits number stored in bit array.
     int numBits{};
@@ -38,8 +38,8 @@ private:
     // Gets bit mask: zero bit set in position in true unsigned int.
     unsigned int getFalseMask(int position) const;
 
-    // Gets block on the position in bit array.
-    Block* getBlock(int position) const;
+    // Gets Container on the position in bit array.
+    Container* getContainer(int position) const;
 
     // Logarithmic positive pow function.
     unsigned int logPow(int num, int pow) const;
@@ -109,7 +109,7 @@ public:
     int count() const;
 
     // Returns a reference to bit value at the position i.
-    Block& operator[](int i);
+    Container& operator[](int i);
 
     // Returns bit's value at the position i and does not edit anything.
     bool operator[](int i) const;
@@ -123,8 +123,8 @@ public:
     // Returns string made of bits.
     std::string to_string() const;
 
-    // Counts blocks amount.
-    int getBlockAmount() const;
+    // Counts Containers amount.
+    int getContainerAmount() const;
 };
 
 bool operator==(const BitArray& a, const BitArray& b);
