@@ -22,11 +22,12 @@ int main(int argc, char** argv) {
     fileReader.close();
 
     FileWriter fileWriter = FileWriter(argv[2]);
-    fileWriter.printString("Word;Frequency;Frequency(%)\n");
     for (const auto& i : WordStatistics.getStatistic()) {
-        std::stringstream ss;
-        ss << i.word << ';' << i.data << ';' << i.percentage << '\n';
-        fileWriter.printString(ss.str());
+        std::vector<std::string> ss;
+        ss.push_back(i.word);
+        ss.push_back(std::to_string(i.data));
+        ss.push_back(std::to_string(i.percentage));
+        fileWriter.printString(ss);
     }
     fileWriter.close();
     return 0;

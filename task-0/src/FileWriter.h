@@ -1,6 +1,7 @@
 #pragma once
 
 #include "FileReader.h"
+#include "vector"
 
 class FileWriter
 {
@@ -10,6 +11,6 @@ private:
 public:
     void open();
     void close();
-    void printString(const std::string& string);
+    void printString(const std::vector<std::string>& strings);
     explicit FileWriter(const std::string& filename);
 };
