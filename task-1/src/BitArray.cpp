@@ -320,7 +320,7 @@ unsigned int BitArray::getTrueMask(int position) {
 }
 
 unsigned int BitArray::getFalseMask(int position) const {
-    return TRUE_CONTAINER - logPow(2, BITS_COUNT - 1 - position);
+    return TRUE_CONTAINER - pow(2, BITS_COUNT - 1 - position);
 }
 
 Container* BitArray::getContainer(int position) const{
@@ -331,17 +331,17 @@ Container* BitArray::getContainer(int position) const{
     return positionPtr;
 }
 
-unsigned int BitArray::logPow(int num, int pow) const {
-    if (pow == 0) {
+unsigned int BitArray::pow(int num, int p) const {
+    if (p == 0) {
         return 1;
     }
-    if (pow == 1) {
+    if (p == 1) {
         return num;
     }
-    if (pow % 2 == 0) {
-        return logPow(num * num, pow / 2);
+    if (p % 2 == 0) {
+        return pow(num * num, p / 2);
     }
-    return logPow(num, pow - 1) * num;
+    return pow(num, p - 1) * num;
 }
 
 bool BitArray::operator[](int i) const {
