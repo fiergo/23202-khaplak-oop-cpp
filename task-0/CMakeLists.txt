@@ -1,8 +1,6 @@
 cmake_minimum_required(VERSION 3.28)
 project(task_0)
 
-file(GLOB_RECURSE TEST_SOURCES LIST_DIRECTORIES false *.h *.cpp)
-
 set(CMAKE_CXX_STANDARD 11)
 
 include_directories(.)
@@ -17,5 +15,3 @@ add_executable(task_0
         src/TextParser.cpp
         src/TextParser.h
 )
-
-add_test(NAME ${BINARY} COMMAND ${BINARY})
