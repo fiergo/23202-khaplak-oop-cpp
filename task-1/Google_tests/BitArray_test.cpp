@@ -28,7 +28,6 @@ TEST(constructors, copyBitArrayConstructor) {
 }
 
 TEST(functionsAffectingBits, swap) {
-    // Test swap function with equal-size Bit Arrays.
     int size = 100;
     BitArray bitArray1 = BitArray(size);
     BitArray bitArray2 = BitArray(size);
@@ -46,7 +45,6 @@ TEST(functionsAffectingBits, swap) {
         EXPECT_EQ(bitArray1[i], bitArray2saved[i]);
         EXPECT_EQ(bitArray2[i], bitArray1saved[i]);
     }
-    // Test swap function with not equal-size Bit Arrays.
     bitArray1.resize(size + 1);
     bitArray1saved = bitArray1;
     bitArray1.swap(bitArray2);
@@ -57,8 +55,6 @@ TEST(functionsAffectingBits, swap) {
         }
         EXPECT_NE(bitArray1[i], bitArray2[i]);
     }
-//    std::cout << bitArray1.to_string() << '\n';
-//    std::cout << bitArray2.to_string() << '\n';
 }
 
 TEST(functionsAffectingBits, operatorEquality) {
