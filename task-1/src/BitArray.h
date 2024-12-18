@@ -41,7 +41,7 @@ private:
     // Возвращает позицию контейнера в массиве
     Container* getContainer(int position) const;
 
-    unsigned int logPow(int num, int pow) const;
+    unsigned int pow(int num, int pow) const;
 public:
     BitArray();
 
