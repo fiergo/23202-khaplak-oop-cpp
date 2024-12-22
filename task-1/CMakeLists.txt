@@ -1,12 +1,10 @@
-cmake_minimum_required(VERSION 3.28)
-project(task_1)
+cmake_minimum_required(VERSION 3.26)
+project(task-1)
 
 set(CMAKE_CXX_STANDARD 11)
 
-include_directories(.)
+include_directories(src)
 
-add_executable(task_1
-        src/main.cpp
-        src/BitArray.cpp
-        src/BitArray.h
-)
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(lib/googletest)
