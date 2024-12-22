@@ -1,22 +1,10 @@
-cmake_minimum_required(VERSION 3.28)
-project(task_2)
+cmake_minimum_required(VERSION 3.26)
+project(task-2)
 
 set(CMAKE_CXX_STANDARD 11)
 
-include_directories(.)
+include_directories(src)
 
-add_executable(task_2
-        src/FileReader.cpp
-        src/FileReader.h
-        src/FileWriter.cpp
-        src/FileWriter.h
-        src/main.cpp
-        src/GameEngine.h
-        src/GameEngine.cpp
-        src/Interface.cpp
-        src/Interface.h
-        src/GameOfLifeParser.h
-        src/GameOfLifeParser.cpp
-        src/LifeGame.h
-        src/LifeGame.cpp
-)
+add_subdirectory(src)
+add_subdirectory(test)
+add_subdirectory(lib/googletest)
