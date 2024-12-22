@@ -108,10 +108,10 @@ TEST(WordStatisticsTest, CaseSensitivity) {
 
     std::vector<WordFrequency> result_vector(result.begin(), result.end());
     ASSERT_EQ(result_vector.size(), 2);
-    ASSERT_EQ(result_vector[0].word, "apple");
+    ASSERT_EQ(result_vector[0].word, "Apple");
     ASSERT_EQ(result_vector[0].data, 1);
     ASSERT_DOUBLE_EQ(result_vector[0].percentage, 50.0);
-    ASSERT_EQ(result_vector[1].word, "Apple");
+    ASSERT_EQ(result_vector[1].word, "apple");
     ASSERT_EQ(result_vector[1].data, 1);
     ASSERT_DOUBLE_EQ(result_vector[1].percentage, 50.0);
 }

@@ -1,7 +1,6 @@
 #include "gtest/gtest.h"
 #include "../src/FileReader.h"
 #include <fstream>
-#include <sstream>
 
 std::string createTempFile(const std::string& content) {
     std::ofstream tempFile;
@@ -10,10 +9,6 @@ std::string createTempFile(const std::string& content) {
     tempFile << content;
     tempFile.close();
     return tempFileName;
-}
-
-void deleteTempFile(const std::string& tempFileName) {
-    std::remove(tempFileName.c_str());
 }
 
 
@@ -26,8 +21,6 @@ TEST(FileReaderTest, ReadSingleLine) {
 
     ASSERT_EQ(line, fileContent);
     ASSERT_TRUE(reader.isNextEOF());
-
-    deleteTempFile(tempFileName);
 }
 
 
@@ -45,8 +38,6 @@ TEST(FileReaderTest, ReadMultipleLines) {
     ASSERT_EQ(line2, "Line 2");
     ASSERT_EQ(line3, "Line 3");
     ASSERT_TRUE(reader.isNextEOF());
-
-    deleteTempFile(tempFileName);
 }
 
 
@@ -59,8 +50,6 @@ TEST(FileReaderTest, EmptyFile) {
 
     ASSERT_TRUE(line.empty());
     ASSERT_TRUE(reader.isNextEOF());
-
-    deleteTempFile(tempFileName);
 }
 
 
@@ -72,7 +61,6 @@ TEST(FileReaderTest, FileWithTrailingNewline) {
 
     ASSERT_EQ(line, "Test line");
     ASSERT_TRUE(reader.isNextEOF());
-    deleteTempFile(tempFileName);
 }
 
 
@@ -84,6 +72,4 @@ TEST(FileReaderTest, isNextEOF_False) {
     ASSERT_FALSE(reader.isNextEOF());
     reader.getLine();
     ASSERT_TRUE(reader.isNextEOF());
-
-    deleteTempFile(tempFileName);
 }

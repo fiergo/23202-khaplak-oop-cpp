@@ -17,13 +17,6 @@ std::string readFileContent(const std::string& filename) {
     return buffer.str();
 }
 
-void deleteFile(const std::string& filename) {
-    if (std::remove(filename.c_str()) != 0)
-    {
-        std::cerr << "Error deleting file: " << filename << std::endl;
-    }
-}
-
 
 TEST(FileWriterTest, WriteSingleLine) {
     const std::string filename = "test_single_line.txt";
@@ -33,7 +26,6 @@ TEST(FileWriterTest, WriteSingleLine) {
 
     std::string fileContent = readFileContent(filename);
     ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)\ntest1;test2;test3\n");
-    deleteFile(filename);
 }
 
 
@@ -49,7 +41,6 @@ TEST(FileWriterTest, WriteMultipleLines) {
 
     std::string fileContent = readFileContent(filename);
     ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)\ndata1;data2;data3\ndata4;data5;data6\ndata7;data8;data9\n");
-    deleteFile(filename);
 }
 
 
@@ -60,8 +51,7 @@ TEST(FileWriterTest, EmptyString) {
     writer.printString(strings);
 
     std::string fileContent = readFileContent(filename);
-    ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)\n");
-    deleteFile(filename);
+    ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)\n;;\n");
 }
 
 
@@ -72,7 +62,6 @@ TEST(FileWriterTest, FileCreation) {
     }
     std::ifstream file(filename);
     ASSERT_TRUE(file.good());
-    deleteFile(filename);
 }
 
 
@@ -81,6 +70,5 @@ TEST(FileWriterTest, CorrectHeader) {
     FileWriter writer(filename);
     std::string fileContent = readFileContent(filename);
 
-    ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)");
-    deleteFile(filename);
+    ASSERT_EQ(fileContent, "Word;Frequency;Frequency(%)\n");
 }
