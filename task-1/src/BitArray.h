@@ -1,107 +1,87 @@
-#pragma once
+#include <cstdint>
+#include <string>
+#include <cstring>
 
-#include <iostream>
+using namespace std;
 
-const unsigned int FIRST_BYTE = 0x80000000;
-const unsigned int TRUE_CONTAINER = 0xffffffff;
-const unsigned int FALSE_CONTAINER = 0;
-const int BITS_COUNT = sizeof(int) * 8;
+class BitArray {
+    unsigned char* bits;
+    int sizeArray;
 
-class Container {
 public:
-    Container* next;
-    unsigned int value;
-    unsigned int lastIndex;
-    explicit Container(unsigned int data);
-    Container& operator=(bool value);
-    operator bool() const;
-};
+    class Wrapper {
+    private:
+        int index;
+        BitArray& array;
+    public:
+        Wrapper(int index, BitArray& array);
+        operator bool() const;
+        Wrapper& operator=(const Wrapper& another) const;
+        Wrapper& operator=(bool value);
+    };
 
-class BitArray
-{
-private:
-    // Указатель на первые 8 элементов (unsigned int)
-    Container* basePtr{};
-
-    // Указатель на последние 8 элементов (unsigned int)
-    Container* endPtr{};
-
-    // Количество битов в массиве
-    int numBits{};
-
-    // Выравнивание количества битов по числу, кратному 8
-    static int alignBits(int numBits) ;
-
-    // Возвращает битовую маску: true бит, установленный в позиции zero unsigned int
-    static unsigned int getTrueMask(int position) ;
-
-    // Возвращает битовую маску: zero бит, установленный в позиции true unsigned int
-    unsigned int getFalseMask(int position) const;
-
-    // Возвращает позицию контейнера в массиве
-    Container* getContainer(int position) const;
-
-    unsigned int pow(int num, int pow) const;
-public:
     BitArray();
-
     ~BitArray();
 
-    explicit BitArray(int numBits, unsigned long value = 0);
-
+    //Конструирует массив, хранящий заданное количество бит.
+    //Первые sizeof(long) бит можно инициализровать с помощью параметра value
+    explicit BitArray(int num_bits, unsigned long value = 0);
     BitArray(const BitArray& b);
 
+    void PrintBitArray();
     void swap(BitArray& b);
 
     BitArray& operator=(const BitArray& b);
 
-    void resize(int numBits, bool value = false);
-
+    void resize(int num_bits, bool value = false);
+    //Очищает массив.
     void clear();
-
+    //Добавляет новый бит в конец массива. В случае необходимости
+    //происходит перераспределение памяти.
     void push_back(bool bit);
-
     BitArray& operator&=(const BitArray& b);
     BitArray& operator|=(const BitArray& b);
     BitArray& operator^=(const BitArray& b);
 
+    //Битовый сдвиг с заполнением нулями.
     BitArray& operator<<=(int n);
     BitArray& operator>>=(int n);
     BitArray operator<<(int n) const;
     BitArray operator>>(int n) const;
 
+    //Устанавливает бит с индексом n в значение val.
     BitArray& set(int n, bool val = true);
-
+    //Заполняет массив истиной.
     BitArray& set();
 
+    //Устанавливает бит с индексом n в значение false.
     BitArray& reset(int n);
 
+    //Заполняет массив ложью.
     BitArray& reset();
 
+    //true, если массив содержит истинный бит.
     bool any() const;
-
+    //true, если все биты массива ложны.
     bool none() const;
-
+    //Битовая инверсия
     BitArray operator~() const;
-
+    //Подсчитывает количество единичных бит.
     int count() const;
 
-    Container& operator[](int i);
-        
-    bool operator[](int i) const;
-
+    //Возвращает значение бита по индексу i.
+    bool operator[](int n) const;
+    Wrapper operator[] (int n);
     int size() const;
-
     bool empty() const;
 
-    std::string to_string() const;
+    //Возвращает строковое представление массива.
+    string to_string() const;
+    friend BitArray operator&(const BitArray& b1, const BitArray& b2);
 
-    int getContainerAmount() const;
+    friend BitArray operator|(const BitArray& b1, const BitArray& b2);
+
+    friend BitArray operator^(const BitArray& b1, const BitArray& b2);
+    friend bool operator==(const BitArray& a, const BitArray& b);
+    friend bool operator!=(const BitArray& a, const BitArray& b);
 };
-
-bool operator==(const BitArray& a, const BitArray& b);
-bool operator!=(const BitArray& a, const BitArray& b);
-
-BitArray operator&(const BitArray& b1, const BitArray& b2);
-BitArray operator|(const BitArray& b1, const BitArray& b2);
-BitArray operator^(const BitArray& b1, const BitArray& b2);

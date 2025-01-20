@@ -1,10 +1,10 @@
-#include <iostream>
 #include "BitArray.h"
 
+using namespace std;
+
 int main() {
-    BitArray bitArray = BitArray(10);
-    bitArray[30] = true;
-    bitArray[2] = true;
-    std::cout << bitArray.to_string();
+    BitArray a(8, 5);
+    a[1] = true;
+    a.PrintBitArray();
     return 0;
 }

@@ -1,397 +1,351 @@
 #include "BitArray.h"
 
-Container::Container(unsigned int value) {
-    this->value = value;
-    lastIndex = 0;
-    next = nullptr;
-}
+#include <iostream>
 
-Container& Container::operator=(bool bit) {
-    if (bit) {
-        this->value |= (1 << (BITS_COUNT - lastIndex % BITS_COUNT - 1));
+using namespace std;
+
+BitArray::BitArray() : bits(nullptr), sizeArray(0) {}
+
+BitArray::BitArray(int num_bits, unsigned long value) {
+    if (num_bits < 0) {
+        bits = nullptr;
+        throw invalid_argument("Invalid argument");
     }
-    else {
-        this->value &= ~(1 << (BITS_COUNT - lastIndex % BITS_COUNT - 1));
+    sizeArray = num_bits;
+    int sizeByte = (sizeArray + 7) / 8;
+    bits = new unsigned char[sizeByte];
+    memset(bits, 0, sizeByte);
+    for (int i = 0; i < sizeof(long) * 8 && i < num_bits; ++i) {
+        if (value & (1UL << i)) {
+            set(i, true);
+        }
     }
-    return *this;
 }
 
-Container::operator bool() const {
-    return (this->value & (1 << (BITS_COUNT - lastIndex % BITS_COUNT - 1))) != 0;
-}
-
-BitArray::BitArray() {
-    basePtr = nullptr;
-    endPtr = nullptr;
-    numBits = 0;
+BitArray::BitArray(const BitArray& b) : sizeArray(b.sizeArray) {
+    if (b.sizeArray < 0) {
+        bits = nullptr;
+        throw invalid_argument("Invalid argument");
+    }
+    int sizeByte = (sizeArray + 7) / 8;
+    bits = new unsigned char[sizeByte];
+    memcpy(bits, b.bits, sizeByte);
 }
 
 BitArray::~BitArray() {
-    clear();
+    delete[] bits;
 }
 
-BitArray::BitArray(int numBits, unsigned long value) {
-    this->numBits = -1;
-    basePtr = nullptr;
-    endPtr = nullptr;
-    resize(numBits, value);
+BitArray::Wrapper::Wrapper(int index, BitArray& array) : index(index), array(array) {}
+
+BitArray::Wrapper::operator bool() const {
+    return (array.bits[index / 8] & (1 << (index % 8))) != 0;
 }
 
-BitArray::BitArray(const BitArray& b) {
-    *this = BitArray(b.numBits, false);
-    Container* curPtrBitArray = (*this).basePtr;
-    Container* curPtrBitArrayToCopy = b.basePtr;
-    while (curPtrBitArrayToCopy) {
-        curPtrBitArray->value = curPtrBitArrayToCopy->value;
-        curPtrBitArray = curPtrBitArray->next;
-        curPtrBitArrayToCopy = curPtrBitArrayToCopy->next;
+BitArray::Wrapper& BitArray::Wrapper::operator=(bool value) {
+    if (index >= array.sizeArray) {
+        throw out_of_range("index out of range");
     }
+    if (value) {
+        array.bits[index / 8] |= (1 << (index % 8));
+    } else {
+        array.bits[index / 8] &= ~(1 << (index % 8));
+    }
+    return *this;
+}
+
+BitArray::Wrapper& BitArray::Wrapper::operator=(const Wrapper& another) const {
+    if (&array != &another.array) {
+        throw invalid_argument("wrapper is not the same");
+    }
+    return *const_cast<Wrapper*>(&another);
+}
+
+void BitArray::PrintBitArray() {
+    for (int i = 0; i < sizeArray; ++i) {
+        cout << ((*this)[i] ? '1' : '0');
+    }
+    cout << endl;
 }
 
 void BitArray::swap(BitArray& b) {
-    int size = (*this).size() <= b.size() ? (*this).size() : b.size();
-    for (int i = 0; i < size; i++) {
-        bool a = b[i];
-        b.set(i, (*this)[i]);
-        set(i, a);
-    }
+    std::swap(this->sizeArray, b.sizeArray);
+    std::swap(this->bits, b.bits);
 }
 
 BitArray& BitArray::operator=(const BitArray& b) {
-    int size = b.size();
-    resize(size);
-    for (int i = 0; i < size; i++) {
-        set(i, b[i]);
+    if (b.sizeArray < 0) {
+        bits = nullptr;
+        throw invalid_argument("Invalid argument");
     }
-    return (*this);
+    if (this != &b) {
+        delete[] bits;
+        sizeArray = b.sizeArray;
+        int sizeByte = (sizeArray + 7) / 8;
+        bits = new unsigned char[sizeByte];
+        memcpy(bits, b.bits, sizeByte);
+    }
+    return *this;
 }
 
-void BitArray::resize(int newNumBits, bool value) {
-    // Check if bits amount is the same.
-    if (newNumBits == this->numBits)
-        return;
-    // Check if we should not change bit array memory Containers.
-    if ((newNumBits / BITS_COUNT == this->numBits / BITS_COUNT) && this->numBits != -1) {
-        this->numBits = newNumBits;
+void BitArray::resize(int num_bits, bool value) {
+    if (num_bits < 0) {
+        bits = nullptr;
+        throw invalid_argument("Invalid argument");
+    }
+
+    if (num_bits == sizeArray) {
         return;
     }
-    // Check if we should delete bit array memory Containers.
-    if (newNumBits < this->numBits) {
-        Container* ContainersToDelete = basePtr;
-        Container* prev = ContainersToDelete;
-        for (int i = 0; i < alignBits(newNumBits) / BITS_COUNT; i++) {
-            prev = ContainersToDelete;
-            ContainersToDelete = ContainersToDelete->next;
+    int sizeByte = (sizeArray + 7) / 8;
+    auto* new_bits = new unsigned char[sizeByte];
+    memcpy(new_bits, bits, min(sizeByte, (num_bits + 7) / 8));
+    if (num_bits > sizeArray) {
+        if (value) {
+            for (int i = sizeArray; i < num_bits; ++i) {
+                new_bits[i / 8] |= (1 << (i % 8));
+            }
         }
-        endPtr = prev;
-        endPtr->next = nullptr;
-        do {
-            Container* ContainerToDelete = ContainersToDelete;
-            ContainersToDelete = ContainersToDelete->next;
-            delete(ContainerToDelete);
-        } while (ContainersToDelete);
-        this->numBits = newNumBits;
-        return;
     }
-    // Check for value input.
-    unsigned int byteValue;
-    if (!value)
-        byteValue = FALSE_CONTAINER;
-    else
-        byteValue = TRUE_CONTAINER;
-    // Add more bit array memory Containers.
-    int i = 0;
-    if (!basePtr) {
-        basePtr = new Container(byteValue);
-        endPtr = basePtr;
-        i++;
-    }
-    for (; i < alignBits(newNumBits) / BITS_COUNT - alignBits(this->numBits) / BITS_COUNT; i++) {
-        auto* newContainer = new Container(byteValue);
-        endPtr->next = newContainer;
-        endPtr = newContainer;
-    }
-    this->numBits = newNumBits;
+    delete[] bits;
+    bits = new_bits;
+    sizeArray = num_bits;
 }
 
 void BitArray::clear() {
-    resize(0);
+    delete[] bits;
+    bits = nullptr;
+    sizeArray = 0;
 }
 
 void BitArray::push_back(bool bit) {
-    int numBitsCopy = numBits;
-    resize(numBits + 1);
-    set(numBitsCopy, bit);
-}
-
-BitArray& BitArray::operator&=(const BitArray& b) {
-    if (size() != b.size() || b.empty() || empty()) {
-        return *this;
-    }
-    for (int i = 0; i < b.size(); i++) {
-        set(i, (*this)[i] && b[i]);
-    }
-    return *this;
-}
-
-BitArray& BitArray::operator|=(const BitArray& b) {
-    if (size() != b.size() || b.empty() || empty()) {
-        return *this;
-    }
-    for (int i = 0; i < b.size(); i++) {
-        set(i, (*this)[i] || b[i]);
-    }
-    return *this;
-}
-
-BitArray& BitArray::operator^=(const BitArray& b) {
-    if (size() != b.size() || b.empty() || empty()) {
-        return *this;
-    }
-    for (int i = 0; i < b.size(); i++) {
-        set(i, (*this)[i] ^ b[i]);
-    }
-    return *this;
-}
-
-BitArray& BitArray::operator<<=(int n) {
-    if (n == 0 || (*this).empty()) {
-        return *this;
-    }
-    if (n < 0) {
-        return (*this) >>= (-1) * n;
-    }
-    n %= numBits;
-    for (int i = n; i < numBits; i++) {
-        set(i - n, (*this)[i]);
-        set(i, false);
-    }
-    return *this;
-}
-
-BitArray& BitArray::operator>>=(int n) {
-    if (n == 0 || (*this).empty()) {
-        return *this;
-    }
-    if (n < 0) {
-        return (*this) <<= (-1) * n;
-    }
-    n %= numBits;
-    for (int i = numBits - n; i > 0; i--) {
-        set(i + n, (*this)[i]);
-        set(i, false);
-    }
-    return *this;
-}
-
-BitArray BitArray::operator<<(int n) const {
-    BitArray bitArray = BitArray(*this);
-    bitArray <<= n;
-    return bitArray;
-}
-
-BitArray BitArray::operator>>(int n) const {
-    BitArray bitArray = BitArray(*this);
-    bitArray >>= n;
-    return bitArray;
+    resize(sizeArray + 1, bit);
+    set(sizeArray - 1, bit);
 }
 
 BitArray& BitArray::set(int n, bool val) {
-    if (n < 0 || n >= numBits) {
-        return *this;
+    if (n < 0 || n >= sizeArray) {
+        throw invalid_argument("Invalid argument");
     }
-    int positionInBitArray = n / BITS_COUNT;
     if (val) {
-        (*getContainer(positionInBitArray)).value = (*getContainer(positionInBitArray)).value | getTrueMask(n % BITS_COUNT);
+        bits[n / 8] |= (1 << (n % 8));
+    } else {
+        bits[n / 8] &= ~(1 << (n % 8));
     }
-    else {
-        (*getContainer(positionInBitArray)).value = (*getContainer(positionInBitArray)).value & getFalseMask(n % BITS_COUNT);
-    }
-    getContainer(positionInBitArray)->lastIndex = n % 8;
     return *this;
 }
 
 BitArray& BitArray::set() {
-    Container* positionPtr = basePtr;
-    while(positionPtr) {
-        positionPtr->value = TRUE_CONTAINER;
-        positionPtr = positionPtr->next;
-    }
+    int sizeByte = (sizeArray + 7) / 8;
+    memset(bits, 255, sizeByte);
     return *this;
 }
 
 BitArray& BitArray::reset(int n) {
-    set(n, false);
+    if (n < 0 || n >= sizeArray) {
+        throw invalid_argument("Invalid argument");
+    }
+    bits[n / 8] &= ~(1 << (n % 8));
     return *this;
 }
 
 BitArray& BitArray::reset() {
-    Container* positionPtr = basePtr;
-    while (positionPtr) {
-        positionPtr->value = FALSE_CONTAINER;
-        positionPtr = positionPtr->next;
-    }
+    int sizeByte = (sizeArray + 7) / 8;
+    memset(bits, 0, sizeByte);
     return *this;
 }
 
 bool BitArray::any() const {
-    bool flag = false;
-    for (int i = 0; i < numBits; i++) {
-        flag = (*this)[i];
-        if (flag) {
-            break;
+    for (int i = 0; i < (sizeArray + 7) / 8; ++i) {
+        if (bits[i]) {
+            return true;
         }
     }
-    return flag;
+    return false;
 }
 
 bool BitArray::none() const {
-    return !any();
-}
-
-BitArray BitArray::operator~() const {
-    BitArray bitArray = BitArray(*this);
-    for (int i = 0; i < bitArray.size(); i++) {
-        if (bitArray[i]) {
-            bitArray.set(i, false);
-        }
-        else {
-            bitArray.set(i, true);
-        }
-    }
-    return bitArray;
-}
-
-int BitArray::count() const {
-    int res = 0;
-    for (int i = 0; i < numBits; i++) {
-        if ((*this)[i]) {
-            res++;
-        }
-    }
-    return res;
-}
-
-Container& BitArray::operator[](int i) {
-    if (i >= numBits) {
-        resize(i + 1, false);
-    }
-    else if (i < 0) {
-        throw 1;
-    }
-    Container* Container = getContainer(i / BITS_COUNT);
-    Container->lastIndex = i;
-    return *Container;
-}
-
-int BitArray::size() const {
-    return numBits;
-}
-
-bool BitArray::empty() const {
-    return numBits == 0;
-}
-
-std::string BitArray::to_string() const {
-    std::string res;
-    for (int i = 0; i < numBits; i++) {
-        int ind = (*this)[i] ? 1 : 0;
-        res.push_back(ind + '0');
-    }
-    return res;
-}
-
-int BitArray::alignBits(int numBits) {
-    if (numBits <= 0) {
-        return 0;
-    }
-    if (numBits % BITS_COUNT == 0) {
-        numBits += BITS_COUNT;
-    }
-    if (numBits % BITS_COUNT != 0) {
-        numBits += (BITS_COUNT - numBits % BITS_COUNT);
-    }
-    return numBits;
-}
-
-unsigned int BitArray::getTrueMask(int position) {
-    unsigned int mask = FIRST_BYTE;
-    return mask >> position;
-}
-
-unsigned int BitArray::getFalseMask(int position) const {
-    return TRUE_CONTAINER - pow(2, BITS_COUNT - 1 - position);
-}
-
-Container* BitArray::getContainer(int position) const{
-    Container* positionPtr = basePtr;
-    for (int i = 0; i < position; i++) {
-        positionPtr = positionPtr->next;
-    }
-    return positionPtr;
-}
-
-unsigned int BitArray::pow(int num, int p) const {
-    if (p == 0) {
-        return 1;
-    }
-    if (p == 1) {
-        return num;
-    }
-    if (p % 2 == 0) {
-        return pow(num * num, p / 2);
-    }
-    return pow(num, p - 1) * num;
-}
-
-bool BitArray::operator[](int i) const {
-    Container* Container = getContainer(i / BITS_COUNT);
-    Container->lastIndex = i;
-    return *Container;
-}
-
-int BitArray::getContainerAmount() const {
-    Container* positionPtr = basePtr;
-    int count = 0;
-    while (positionPtr) {
-        count++;
-        positionPtr = positionPtr->next;
-    }
-    return count;
-}
-
-bool operator==(const BitArray& a, const BitArray& b) {
-    int sizeA = a.size();
-    int sizeB = b.size();
-    if (sizeA != sizeB) {
-        return false;
-    }
-    for (int i = 0; i < sizeA; i++) {
-        if (a[i] != b[i]) {
+    for (int i = 0; i < (sizeArray + 7) / 8; ++i) {
+        if (bits[i]) {
             return false;
         }
     }
     return true;
 }
 
+int BitArray::count() const {
+    int counter = 0;
+    for (int i = 0; i < sizeArray; ++i) {
+        if ((*this)[i]) {
+            counter++;
+        }
+    }
+    return counter;
+}
+
+int BitArray::size() const {
+    return sizeArray;
+}
+
+bool BitArray::empty() const {
+    return sizeArray == 0;
+}
+
+string BitArray::to_string() const {
+    string result(sizeArray, '0');
+    for (int i = 0; i < sizeArray; ++i) {
+        if ((*this)[i]) {
+            result[i] = '1';
+        }
+    }
+    return result;
+}
+
+BitArray& BitArray::operator&=(const BitArray& b) {
+    if (sizeArray != b.sizeArray) {
+        throw invalid_argument("Invalid argument");
+    }
+    for (int i = 0; i < sizeArray; ++i) {
+        bits[i] &= b.bits[i];
+    }
+    return *this;
+}
+
+BitArray& BitArray::operator|=(const BitArray& b) {
+    if (sizeArray != b.sizeArray) {
+        throw invalid_argument("Wrong size");
+    }
+    for (int i = 0; i < sizeArray; ++i) {
+        bits[i] |= b.bits[i];
+    }
+    return *this;
+}
+
+BitArray& BitArray::operator^=(const BitArray& b) {
+    if (sizeArray != b.sizeArray) {
+        throw invalid_argument("Wrong size");
+    }
+    for (int i = 0; i < sizeArray; ++i) {
+        bits[i] ^= b.bits[i];
+    }
+    return *this;
+}
+
+BitArray& BitArray::operator<<=(int n) {
+    if (n < 0) {
+        throw invalid_argument("Invalid argument");
+    }
+    if (n >= sizeArray) {
+        reset();
+        return *this;
+    }
+    for (int i = 0; i < sizeArray - n; ++i) {
+        set(i, (*this)[i + n]);
+    }
+    for (int i = sizeArray - n; i < sizeArray; ++i) {
+        reset(i);
+    }
+    return *this;
+}
+
+BitArray& BitArray::operator>>=(int n) {
+    if (n < 0) {
+        throw invalid_argument("Negative shift");
+    }
+    if (n >= sizeArray) {
+        reset();
+        return *this;
+    }
+    for (int i = sizeArray - 1; i >= n; --i) {
+        set(i, (*this)[i - n]);
+    }
+    for (int i = 0; i < n; ++i) {
+        reset(i);
+    }
+    return *this;
+}
+
+BitArray BitArray::operator>>(int n) const {
+    if (n < 0) {
+        throw invalid_argument("Invalid argument");
+    }
+    BitArray temp(*this);
+    temp >>= n;
+    return temp;
+}
+
+BitArray BitArray::operator<<(int n) const {
+    if (n < 0) {
+        throw invalid_argument("Invalid argument");
+    }
+    BitArray temp(*this);
+    temp <<= n;
+    return temp;
+}
+
+BitArray BitArray::operator~() const {
+    BitArray result(*this);
+    int sizeByte = (sizeArray + 7) / 8;
+    for (int i = 0; i < sizeByte; ++i) {
+        result.bits[i] = ~result.bits[i];
+    }
+
+    return result;
+}
+bool BitArray::operator[](int n) const {
+    if (n < 0 || n >= sizeArray) {
+        throw invalid_argument("Wrong index");
+    }
+    return (bits[n / 8] >> (n % 8)) & 1;
+}
+
+BitArray::Wrapper BitArray::operator[](int n) {
+    if (n < 0 || n >= sizeArray) {
+        throw invalid_argument("Wrong index");
+    }
+    return Wrapper(n, *this);
+}
+
+bool operator==(const BitArray& a, const BitArray& b) {
+    if (a.sizeArray != b.sizeArray) {
+        throw invalid_argument("Invalid argument");
+    }
+    return memcmp(a.bits, b.bits, (a.sizeArray + 7) / 8) == 0;
+}
+
 bool operator!=(const BitArray& a, const BitArray& b) {
     return !(a == b);
 }
 
-BitArray operator&(const BitArray& b1, const BitArray& b2) {
-    BitArray bitArray = BitArray(b1);
-    bitArray &= b2;
-    return bitArray;
+BitArray operator&(const BitArray& a, const BitArray& b) {
+    if (a.sizeArray != b.sizeArray) {
+        throw invalid_argument("Wrong size");
+    }
+    BitArray result(a);
+    for (int i = 0; i < a.sizeArray; ++i) {
+        result.bits[i] = a.bits[i] & b.bits[i];
+    }
+    return result;
 }
 
-BitArray operator|(const BitArray& b1, const BitArray& b2) {
-    BitArray bitArray = BitArray(b1);
-    bitArray |= b2;
-    return bitArray;
+BitArray operator|(const BitArray& b1, const BitArray& b) {
+    if (b1.sizeArray != b.sizeArray) {
+        throw invalid_argument("Wrong size");
+    }
+    BitArray result(b1);
+    for (int i = 0; i < b1.sizeArray; ++i) {
+        result.bits[i] = b1.bits[i] | b.bits[i];
+    }
+    return result;
 }
 
-BitArray operator^(const BitArray& b1, const BitArray& b2) {
-    BitArray bitArray = BitArray(b1);
-    bitArray ^= b2;
-    return bitArray;
+BitArray operator^(const BitArray& a, const BitArray& b) {
+    if (a.sizeArray != b.sizeArray) {
+        throw invalid_argument("Wrong size");
+    }
+    BitArray result(a);
+    for (int i = 0; i < a.size(); ++i) {
+        result.bits[i] = a.bits[i] ^ b.bits[i];
+    }
+    return result;
 }
