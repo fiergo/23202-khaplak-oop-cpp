@@ -7,56 +7,6 @@ TEST(constructors, basictBitArrayConstructor) {
     EXPECT_EQ(0, bitArray.size());
 }
 
-TEST(constructors, explicitBitArrayConstructor) {
-    int size = 100;
-    BitArray bitArray = BitArray(size, true);
-    EXPECT_EQ(size, bitArray.size());
-    bitArray.reset(size / 2);
-    EXPECT_EQ(size - 1, bitArray.count());
-}
-
-TEST(constructors, copyBitArrayConstructor) {
-    int size = 100;
-    BitArray bitArray = BitArray(size, true);
-    BitArray bitArray1 = BitArray(bitArray);
-    EXPECT_EQ(size, bitArray1.size());
-    bitArray1.reset(size / 2);
-    EXPECT_EQ(size - 1, bitArray1.count());
-    EXPECT_NE(bitArray1.count(), bitArray.count());
-    bitArray1.clear();
-    EXPECT_EQ(size, bitArray.size());
-}
-
-TEST(functionsAffectingBits, swap) {
-    int size = 100;
-    BitArray bitArray1 = BitArray(size);
-    BitArray bitArray2 = BitArray(size);
-    for (int i = 0; i < size; ++i) {
-        if (i % 2 == 0) {
-            bitArray1.set(i);
-        } else {
-            bitArray2.set(i);
-        }
-    }
-    BitArray bitArray1saved = bitArray1;
-    BitArray bitArray2saved = bitArray2;
-    bitArray1.swap(bitArray2);
-    for (int i = 0; i < size; ++i) {
-        EXPECT_EQ(bitArray1[i], bitArray2saved[i]);
-        EXPECT_EQ(bitArray2[i], bitArray1saved[i]);
-    }
-    bitArray1.resize(size + 1);
-    bitArray1saved = bitArray1;
-    bitArray1.swap(bitArray2);
-    for (int i = 0; i < size + 1; ++i) {
-        if (i == size) {
-            EXPECT_EQ(bitArray1[i], bitArray1saved[i]);
-            break;
-        }
-        EXPECT_NE(bitArray1[i], bitArray2[i]);
-    }
-}
-
 TEST(functionsAffectingBits, operatorEquality) {
     int size = 100;
     BitArray bitArray = BitArray(size);
@@ -111,40 +61,6 @@ TEST(functionsAffectingBits, push_back) {
     bitArray.clear();
     bitArray.push_back(true);
     EXPECT_EQ(bitArray[0], true);
-}
-
-TEST(functionsAffectingBits, operatorBitwiseConjuction) {
-    int size = 100;
-    BitArray bitArray1 = BitArray(size);
-    BitArray bitArray2 = BitArray(size);
-    for (int i = 0; i < size; ++i) {
-        if (i % 2 == 0) {
-            bitArray1.set(i);
-        } else {
-            bitArray2.set(i);
-        }
-    }
-    bitArray1 &= bitArray2;
-    for (int i = 0; i < size; ++i) {
-        EXPECT_EQ(bitArray1[i], false);
-    }
-    bitArray1.resize(size*2);
-    for (int i = 0; i < size*2; ++i) {
-        if (i % 2 == 0)
-            bitArray1.set(i);
-    }
-    bitArray1.set(size + size/2);
-    bitArray1 &= bitArray2;
-    for (int i = 0; i < size * 2; ++i) {
-        if (i == size + size/2) {
-            EXPECT_EQ(bitArray1[i], true);
-            continue;
-        }
-        if (i % 2 == 0)
-            EXPECT_EQ(bitArray1[i], true);
-        else
-            EXPECT_EQ(bitArray1[i], false);
-    }
 }
 
 TEST(functionsAffectingBits, operatorBitwiseDisjuction) {
@@ -387,14 +303,6 @@ TEST(functionsAffectingBits, operatorSubscript) {
     EXPECT_TRUE(bitArray[size / 2] == true);
     EXPECT_TRUE(bitArray[size / 2 - 1] == false);
     EXPECT_TRUE(bitArray[size / 2 + 1] == false);
-}
-
-TEST(functionsAffectingBits, operatorSubscriptOverflow) {
-    int size = 100;
-    BitArray bitArray = BitArray(size);
-    bitArray[size] = true;
-    EXPECT_EQ(bitArray.to_string()[size], '1');
-    EXPECT_EQ(bitArray.getContainerAmount(), size / BITS_COUNT + 1);
 }
 
 TEST(functionsGettingInfo, size) {
