@@ -77,10 +77,9 @@ public:
 
     //Возвращает строковое представление массива.
     string to_string() const;
+
     friend BitArray operator&(const BitArray& b1, const BitArray& b2);
-
     friend BitArray operator|(const BitArray& b1, const BitArray& b2);
-
     friend BitArray operator^(const BitArray& b1, const BitArray& b2);
     friend bool operator==(const BitArray& a, const BitArray& b);
     friend bool operator!=(const BitArray& a, const BitArray& b);
